@@ -1,0 +1,220 @@
+---
+title: "simmons_algorithm"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+
+vecn = c(5, 10, 15, 20, 25)
+
+epsvec = seq(0, 1, length.out = 40)
+l = 100 #number of things you want to average for error rate estimate (cuz actual selection of p and q is drawn randomly)
+m = 100 #number of things to estimate accuracy (cuz the actual switches can be random)
+
+#epscols = matrix()
+
+for(n in vecn){
+
+  errorrate_vec = vector()
+  
+  for(eps in epsvec){
+  
+  errorrate_est = 0
+  
+  for(k in 1:l){
+    predictions = vector()
+    actual = vector()
+    
+    p = runif(1, min = 0, max = 1)
+    q = runif(1, min = 0, max = 1)
+    
+    for(j in 1:m){
+      #probabilities
+      pest = 0.5
+      qest = 0.5
+      cur = "p"
+      psd = sqrt(1/12)
+      qsd = sqrt(1/12)
+      ph = 0
+      pn = 0
+      qh = 0
+      qn = 0
+      pswitch = 0
+      qswitch = 0
+      
+      for(i in 1:n){
+        r = (pn+qn)/(n)
+        peps = (exp(-1/(1-r))/(exp(-1/(1-r))+exp(-1/r)))*eps*(qsd/(psd+qsd))        
+        qeps = (exp(-1/(1-r))/(exp(-1/(1-r))+exp(-1/r)))*eps*(psd/(psd+qsd))   
+
+        if(cur == "p"){
+          switch = rbinom(1, 1, peps)
+                  if(switch == 1){
+          if(qest+qsd > pest+psd){
+              ph = ph+rbinom(1, 1, p)
+              pn = pn+1
+              pest = (ph+1)/(pn+2)
+              psd = sqrt(((1+ph)*(1-ph+pn))/((pn+2)*(pn+2)*(pn+3)))  
+          }
+          else if(pest+psd == qest+qsd){
+            switch2 = rbinom(1, 1, 0.5)
+            if(switch2 == 1){
+              qh = qh+rbinom(1, 1, q)
+              qn = qn+1
+              qest = (qh+1)/(qn+2)
+              qsd = sqrt(((1+qh)*(1-qh+qn))/((qn+2)*(qn+2)*(qn+3)))
+            }
+            else{
+              ph = ph+rbinom(1, 1, p)
+              pn = pn+1
+              pest = (ph+1)/(pn+2)
+              psd = sqrt(((1+ph)*(1-ph+pn))/((pn+2)*(pn+2)*(pn+3)))             
+            }
+          }
+          else{
+              qh = qh+rbinom(1, 1, q)
+              qn = qn+1
+              qest = (qh+1)/(qn+2)
+              qsd = sqrt(((1+qh)*(1-qh+qn))/((qn+2)*(qn+2)*(qn+3)))
+          }
+          
+          
+        }
+        else{
+          if(qest+qsd > pest+psd){
+            qh = qh+rbinom(1, 1, q)
+            qn = qn+1
+            qest = (qh+1)/(qn+2)
+            qsd = sqrt(((1+qh)*(1-qh+qn))/((qn+2)*(qn+2)*(qn+3)))
+          }
+          else if(pest+psd == qest+qsd){
+            switch2 = rbinom(1, 1, 0.5)
+            if(switch2 == 1){
+              qh = qh+rbinom(1, 1, q)
+              qn = qn+1
+              qest = (qh+1)/(qn+2)
+              qsd = sqrt(((1+qh)*(1-qh+qn))/((qn+2)*(qn+2)*(qn+3)))
+            }
+            else{
+              ph = ph+rbinom(1, 1, p)
+              pn = pn+1
+              pest = (ph+1)/(pn+2)
+              psd = sqrt(((1+ph)*(1-ph+pn))/((pn+2)*(pn+2)*(pn+3)))             
+            }
+          }
+          else{
+              ph = ph+rbinom(1, 1, p)
+              pn = pn+1
+              pest = (ph+1)/(pn+2)
+              psd = sqrt(((1+ph)*(1-ph+pn))/((pn+2)*(pn+2)*(pn+3)))  
+          }
+        
+        }
+        }
+        else {
+          switch = rbinom(1, 1, qeps) 
+                  if(switch == 1){
+          if(qest+qsd > pest+psd){
+              ph = ph+rbinom(1, 1, p)
+              pn = pn+1
+              pest = (ph+1)/(pn+2)
+              psd = sqrt(((1+ph)*(1-ph+pn))/((pn+2)*(pn+2)*(pn+3)))  
+          }
+          else if(pest+psd == qest+qsd){
+            switch2 = rbinom(1, 1, 0.5)
+            if(switch2 == 1){
+              qh = qh+rbinom(1, 1, q)
+              qn = qn+1
+              qest = (qh+1)/(qn+2)
+              qsd = sqrt(((1+qh)*(1-qh+qn))/((qn+2)*(qn+2)*(qn+3)))
+            }
+            else{
+              ph = ph+rbinom(1, 1, p)
+              pn = pn+1
+              pest = (ph+1)/(pn+2)
+              psd = sqrt(((1+ph)*(1-ph+pn))/((pn+2)*(pn+2)*(pn+3)))             
+            }
+          }
+          else{
+              qh = qh+rbinom(1, 1, q)
+              qn = qn+1
+              qest = (qh+1)/(qn+2)
+              qsd = sqrt(((1+qh)*(1-qh+qn))/((qn+2)*(qn+2)*(qn+3)))
+          }
+          
+          
+        }
+        else{
+          if(qest+qsd > pest+psd){
+            qh = qh+rbinom(1, 1, q)
+            qn = qn+1
+            qest = (qh+1)/(qn+2)
+            qsd = sqrt(((1+qh)*(1-qh+qn))/((qn+2)*(qn+2)*(qn+3)))
+          }
+          else if(pest+psd == qest+qsd){
+            switch2 = rbinom(1, 1, 0.5)
+            if(switch2 == 1){
+              qh = qh+rbinom(1, 1, q)
+              qn = qn+1
+              qest = (qh+1)/(qn+2)
+              qsd = sqrt(((1+qh)*(1-qh+qn))/((qn+2)*(qn+2)*(qn+3)))
+            }
+            else{
+              ph = ph+rbinom(1, 1, p)
+              pn = pn+1
+              pest = (ph+1)/(pn+2)
+              psd = sqrt(((1+ph)*(1-ph+pn))/((pn+2)*(pn+2)*(pn+3)))             
+            }
+          }
+          else{
+              ph = ph+rbinom(1, 1, p)
+              pn = pn+1
+              pest = (ph+1)/(pn+2)
+              psd = sqrt(((1+ph)*(1-ph+pn))/((pn+2)*(pn+2)*(pn+3)))  
+          }
+        
+        }
+        }
+        
+
+        if(pest+psd >= qest+qsd){
+          cur = "p"
+        }
+        else{
+          cur = "q"
+        }
+      }
+      predictions = c(predictions, cur)
+      if(p > q){
+        actual = c(actual, "p")
+      }
+      else{
+        actual = c(actual, "q")
+      }
+    }
+    
+    acccnt = 0
+    for(i in 1:m){
+      if(predictions[i] == actual[i]){
+        acccnt = acccnt+1
+      }
+    }
+    
+    oneminuserrorrate = acccnt/m
+    errorrate_est = errorrate_est+oneminuserrorrate
+  }
+  errorrate_est = 1-errorrate_est/l
+  errorrate_vec = c(errorrate_vec, errorrate_est)
+  }
+  
+  plot(epsvec, errorrate_vec, xlab = "Epsilon", ylab = "Error Rate")
+}
+```
+
+

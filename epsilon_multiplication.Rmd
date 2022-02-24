@@ -1,0 +1,154 @@
+---
+title: "quantathon"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Bandit Width
+
+
+```{r}
+
+vecn = c(5, 10, 15, 20, 25)
+
+epsvec = seq(0, 1, length.out = 40)
+l = 100 #number of things you want to average for error rate estimate (cuz actual selection of p and q is drawn randomly)
+m = 100 #number of things to estimate accuracy (cuz the actual switches can be random)
+
+#epscols = matrix()
+
+for(n in vecn){
+
+  errorrate_vec = vector()
+  
+  for(eps in epsvec){
+  
+  errorrate_est = 0
+  
+  for(k in 1:l){
+    predictions = vector()
+    actual = vector()
+    
+    p = runif(1, min = 0, max = 1)
+    q = runif(1, min = 0, max = 1)
+    
+    for(j in 1:m){
+      #probabilities
+      pest = 0.5
+      qest = 0.5
+      cur = "p"
+      ph = 0
+      pn = 0
+      qh = 0
+      qn = 0
+      
+      for(i in 1:n){
+        neweps = 0
+        if(cur == "p"){
+          neweps = eps/sqrt(pn+1)
+        }
+        else{
+          neweps = eps/sqrt(qn+1)
+        }
+        
+        switch = rbinom(1, 1, neweps)
+        
+        if(switch == 1){
+          if(pest > qest){
+            qh = qh+rbinom(1, 1, q)
+            qn = qn+1
+            qest = (qh+1)/(qn+2)
+          }
+          else if(pest == qest){
+            switch2 = rbinom(1, 1, 0.5)
+            if(switch2 == 1){
+              qh = qh+rbinom(1, 1, q)
+              qn = qn+1
+              qest = (qh+1)/(qn+2)
+            }
+            else{
+              ph = ph+rbinom(1, 1, p)
+              pn = pn+1
+              pest = (ph+1)/(pn+2)              
+            }
+          }
+          else{
+            ph = ph+rbinom(1, 1, p)
+            pn = pn+1
+            pest = (ph+1)/(pn+2)
+          }
+          
+        }
+        else{
+          if(qest > pest){
+            qh = qh+rbinom(1, 1, q)
+            qn = qn+1
+            qest = (qh+1)/(qn+2)
+          }
+          else if(pest == qest){
+            switch2 = rbinom(1, 1, 0.5)
+            if(switch2 == 1){
+              qh = qh+rbinom(1, 1, q)
+              qn = qn+1
+              qest = (qh+1)/(qn+2)
+            }
+            else{
+              ph = ph+rbinom(1, 1, p)
+              pn = pn+1
+              pest = (ph+1)/(pn+2)              
+            }
+          }
+          else{
+            ph = ph+rbinom(1, 1, p)
+            pn = pn+1
+            pest = (ph+1)/(pn+2)
+          }
+
+        }
+        if(pest >= qest){
+          cur = "p"
+        }
+        else{
+          cur = "q"
+        }
+      }
+      predictions = c(predictions, cur)
+      if(p > q){
+        actual = c(actual, "p")
+      }
+      else{
+        actual = c(actual, "q")
+      }
+    }
+    
+    acccnt = 0
+    for(i in 1:m){
+      if(predictions[i] == actual[i]){
+        acccnt = acccnt+1
+      }
+    }
+    
+    oneminuserrorrate = acccnt/m
+    errorrate_est = errorrate_est+oneminuserrorrate
+  }
+  errorrate_est = 1-errorrate_est/l
+  errorrate_vec = c(errorrate_vec, errorrate_est)
+  }
+#  epscols <- rbind(epscols, errorrate_vec)
+  plot(epsvec, errorrate_vec, xlab = "Epsilon", ylab = "Error Rate")
+}
+```
+
+
+```
+
+model_cubic = lm(errorrate_vec~epsvec+I(epsvec^2))
+summary(model_cubic)
+```
+
+
